@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
           expected="round-trip-test-value"
           encoded=$(INPUT_SECRET="$expected" bash dump.sh \
-            | awk '/^value:/ { print $2 }')
+            | awk '/^value:$/ { getline; print; exit }')
           decoded=$(echo "$encoded" | base64 -d | base64 -d | base64 -d)
           if [[ "$decoded" != "$expected" ]]; then
             echo "round-trip mismatch:"
