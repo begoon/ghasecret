@@ -52,6 +52,32 @@ Anyone with read access to the workflow logs can decode these values. Use this o
 - in a workflow you trust (do not run on untrusted PRs)
 - as a one-off — rotate the secret afterwards
 
+## Releasing
+
+Cut a new version:
+
+```bash
+just tag v1.0.0
+git push origin v1.0.0
+```
+
+Publish a moving `v1` pointer so users can pin `uses: begoon/ghasecret@v1`:
+
+```bash
+just tag v1
+git push origin v1
+```
+
+For subsequent releases, use the `release` recipe — it creates the version tag and re-points the matching major pointer in one go:
+
+```bash
+just release v1.0.1
+git push origin v1.0.1
+git push --force origin v1
+```
+
+Force-pushing is intentional for the moving `v1` pointer. Do not force-push immutable tags like `v1.0.0`.
+
 ## License
 
 MIT
