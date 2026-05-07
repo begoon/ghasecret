@@ -1,0 +1,27 @@
+name: ghasecret
+description: Triple-base64-encode secrets so they bypass GitHub Actions log masking and can be recovered locally.
+branding:
+  icon: unlock
+  color: orange
+
+inputs:
+  secret:
+    description: A single secret value to dump. Use this OR `secrets`.
+    required: false
+    default: ""
+  secrets:
+    description: |
+      Multiline list of secrets, one per line in `NAME=VALUE` format.
+      The NAME is used as the output label.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Dump secrets
+      shell: bash
+      env:
+        INPUT_SECRET: ${{ inputs.secret }}
+        INPUT_SECRETS: ${{ inputs.secrets }}
+      run: bash "${{ github.action_path }}/dump.sh"

@@ -1,0 +1,63 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run action with single secret
+        id: single
+        uses: ./
+        with:
+          secret: hunter2
+
+      - name: Run action with multiple secrets
+        id: multi
+        uses: ./
+        with:
+          secrets: |
+            ALPHA=alpha-value
+            BRAVO=bravo value with spaces
+            CHARLIE=ch4rl1e!@#$%
+
+      - name: Round-trip a known value via dump.sh directly
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="round-trip-test-value"
+          encoded=$(INPUT_SECRET="$expected" bash dump.sh \
+            | awk '/^value:/ { print $2 }')
+          decoded=$(echo "$encoded" | base64 -d | base64 -d | base64 -d)
+          if [[ "$decoded" != "$expected" ]]; then
+            echo "round-trip mismatch:"
+            echo "  expected: $expected"
+            echo "  decoded:  $decoded"
+            exit 1
+          fi
+          echo "round-trip ok"
+
+      - name: Action fails when no input is given
+        shell: bash
+        run: |
+          set -euo pipefail
+          if bash dump.sh; then
+            echo "expected failure when no input is given" >&2
+            exit 1
+          fi
+          echo "no-input failure ok"
+
+      - name: Action fails on malformed line
+        shell: bash
+        run: |
+          set -euo pipefail
+          if INPUT_SECRETS="oops-no-equals" bash dump.sh; then
+            echo "expected failure on malformed line" >&2
+            exit 1
+          fi
+          echo "malformed-line failure ok"
